@@ -22,7 +22,7 @@
 
 
     <?php
-
+    //holaaaaaaaaa
     $pdo = new PDO('pgsql:host=localhost;dbname=empresa', 'empresa', 'empresa');
     $pdo->beginTransaction();
     $sent = $pdo->query('LOCK TABLE departamentos IN SHARE MODE');
