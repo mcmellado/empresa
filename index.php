@@ -1,5 +1,6 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,56 +9,80 @@
 </head>
 <body>
     <?php
-    $codigo = (isset($_GET['codigo'])) ? trim($_GET['codigo']) : null;
+    $desde_codigo = (isset($_GET['desde_codigo'])) ? trim($_GET['desde_codigo']) : null;
+    $hasta_codigo = (isset($_GET['hasta_codigo'])) ? trim($_GET['hasta_codigo']) : null;
+    $denominacion_empresa = (isset($_GET['denominacion_empresa'])) ? trim($_GET['denominacion_empresa']) : null;
     ?>
     <div>
-       <form action="" method="get">
-            <label>
-                Código:
-                <input type="text" name="codigo" size="8" value="<?= $codigo ?>" >
-            </label>
-           <button type="submit">Buscar</button>   
-       </form> 
+        <form action="" method="get">
+            <fieldset>
+                <legend>Criterios de búsqueda</legend>
+                <p>
+                    <label>
+                        Desde código:
+                        <input type="text" name="desde_codigo" size="8" value="<?= $desde_codigo ?>">
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        Hasta código:
+                        <input type="text" name="hasta_codigo" size="8" value="<?= $hasta_codigo ?>">
+                    </label>
+
+                </p> 
+                <p>
+                    <label>
+                        Denominación:
+                        <input type="text" name="denominacion_empresa" size="30" value="<?= $denominacion_empresa ?>">
+                    </label>
+                </p>
+                <button type="submit">Buscar</button>
+            </fieldset>
+        </form>
     </div>
-
-
     <?php
-    //holaaaaaaaaa
     $pdo = new PDO('pgsql:host=localhost;dbname=empresa', 'empresa', 'empresa');
     $pdo->beginTransaction();
     $sent = $pdo->query('LOCK TABLE departamentos IN SHARE MODE');
-    $sent = $pdo->prepare('SELECT COUNT(*) FROM departamentos WHERE codigo = :codigo ');
-    $sent->execute([':codigo' => $codigo]);
-
+    $sent = $pdo->prepare('SELECT COUNT(*)
+                            FROM departamentos
+                            WHERE denominacion = :denominacion_empresa 
+                            AND codigo BETWEEN :desde_codigo AND :hasta_codigo');
+    $sent->execute([
+        ':desde_codigo' => $desde_codigo,
+        ':hasta_codigo' => $hasta_codigo,
+        ':denominacion_empresa' => $denominacion_empresa
+    ]);
     $total = $sent->fetchColumn();
-    $sent = $pdo->prepare('SELECT * FROM departamentos WHERE codigo = :codigo ORDER BY codigo');
-    $sent->execute([':codigo' => $codigo]);
-
+    $sent = $pdo->prepare('SELECT *
+                            FROM departamentos
+                            WHERE denominacion = :denominacion_empresa 
+                            AND codigo BETWEEN :desde_codigo AND :hasta_codigo
+                         ORDER BY codigo');
+    $sent->execute([
+        ':desde_codigo' => $desde_codigo,
+        ':hasta_codigo' => $hasta_codigo,
+        ':denominacion_empresa' => $denominacion_empresa
+    ]);
     $pdo->commit();
     ?>
-
+    <br>
     <div>
-    <table style="margin: auto" border="1">
-
-   <thead>
-       <th> Código </th>
-       <th> Denominación </th> 
-   </thead>
-   <tbody>
-    <?php foreach ($sent as $fila): ?>
-        <tr>
-            <td> <?= $fila['codigo'] ?> </td>
-            <td> <?= $fila['denominacion'] ?></td>
-
-        </tr>
-    <?php endforeach ?>
-    <p> Numero total de filas: <?= $total ?> </p>
-
-  </tbody> 
-
-    </table>
-
+        <table style="margin: auto" border="1">
+            <thead>
+                <th>Código</th>
+                <th>Denominación</th>
+            </thead>
+            <tbody>
+                <?php foreach ($sent as $fila): ?>
+                    <tr>
+                        <td><?= $fila['codigo'] ?></td>
+                        <td><?= $fila['denominacion'] ?></td>
+                    </tr>
+                <?php endforeach ?>
+            </tbody>
+        </table>
+        <p>Número total de filas: <?= $total ?></p>
     </div>
-    
 </body>
 </html>
