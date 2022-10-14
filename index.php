@@ -44,26 +44,40 @@
     $pdo = new PDO('pgsql:host=localhost;dbname=empresa', 'empresa', 'empresa');
     $pdo->beginTransaction();
     $sent = $pdo->query('LOCK TABLE departamentos IN SHARE MODE');
-    $sent = $pdo->prepare('SELECT COUNT(*)
+    $where = [];
+    $execute = [];
+    if (isset($desde_codigo) && $desde_codigo != "") {
+        $where[] = 'codigo >= :desde_codigo';
+        $execute[':$desde_codigo'] = $desde_codigo;
+
+    }
+
+    if (isset($hasta_codigo) && $hasta_codigo != "") {
+        $where[] = 'codigo >= :hasta_codigo';
+        $execute[':$hasta_codigo'] = $desde_codigo;
+
+    }
+
+    if (isset($denominacion_empresa) && $denominacion_empresa != "") {
+        $where[] = 'lower(denominacion) LIKE . lower(:denominacion_empresa)';
+        $execute[':denominacion_empresa'] = "%$denominacion_empresa%"; 
+
+    }
+
+    $where = !empty($where) ? 'WHERE' . implode(' AND ', $where) : '';
+
+
+    $sent = $pdo->prepare("SELECT COUNT(*)
                             FROM departamentos
-                            WHERE denominacion = :denominacion_empresa 
-                            AND codigo BETWEEN :desde_codigo AND :hasta_codigo');
-    $sent->execute([
-        ':desde_codigo' => $desde_codigo,
-        ':hasta_codigo' => $hasta_codigo,
-        ':denominacion_empresa' => $denominacion_empresa
-    ]);
+                            $where");
+    $sent->execute($execute);
+
     $total = $sent->fetchColumn();
-    $sent = $pdo->prepare('SELECT *
+    $sent = $pdo->prepare("SELECT *
                             FROM departamentos
-                            WHERE denominacion = :denominacion_empresa 
-                            AND codigo BETWEEN :desde_codigo AND :hasta_codigo
-                         ORDER BY codigo');
-    $sent->execute([
-        ':desde_codigo' => $desde_codigo,
-        ':hasta_codigo' => $hasta_codigo,
-        ':denominacion_empresa' => $denominacion_empresa
-    ]);
+                            $where ORDER BY codigo");
+
+    $sent->execute($execute);
     $pdo->commit();
     ?>
     <br>
