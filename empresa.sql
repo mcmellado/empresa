@@ -15,3 +15,11 @@ INSERT INTO departamentos (codigo, denominacion)
             (30, 'Prevención'),
             (40, 'Laboratorio'),
             (50, 'Automoación');
+
+
+CREATE TABLE empleados (
+    id                  bigserial       PRIMARY KEY,
+    codigo              numeric(4)      NOT NULL UNIQUE,
+    salario             numeric(7,2)    NOT NULL,
+    departamento_id     bigint          NOT NULL UNIQUE,
+);
